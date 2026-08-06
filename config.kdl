@@ -1,11 +1,11 @@
 // This config is in the KDL format: https://kdl.dev
 // "/-" comments out the following node.
 // Check the wiki for a full description of the configuration:
-// https://niri-wm.github.io/niri/Configuration:-Introduction
+// https://yalter.github.io/niri/Configuration:-Introduction
 
 // Input device configuration.
 // Find the full list of options on the wiki:
-// https://niri-wm.github.io/niri/Configuration:-Input
+// https://yalter.github.io/niri/Configuration:-Input
 input {
     keyboard {
         xkb {
@@ -14,6 +14,7 @@ input {
 
             // For example:
             // layout "us,ru"
+            layout "jp"
             // options "grp:win_space_toggle,compose:ralt,ctrl:nocaps"
 
             // If this section is empty, niri will fetch xkb settings
@@ -73,8 +74,12 @@ input {
 // by running `niri msg outputs` while inside a niri instance.
 // The built-in laptop monitor is usually called "eDP-1".
 // Find more information on the wiki:
-// https://niri-wm.github.io/niri/Configuration:-Outputs
+// https://yalter.github.io/niri/Configuration:-Outputs
 // Remember to uncomment the node by removing "/-"!
+output "HDMI-A-1" {
+    focus-at-startup
+}
+
 /-output "eDP-1" {
     // Uncomment this line to disable this output.
     // off
@@ -108,7 +113,7 @@ input {
 
 // Settings that influence how windows are positioned and sized.
 // Find more information on the wiki:
-// https://niri-wm.github.io/niri/Configuration:-Layout
+// https://yalter.github.io/niri/Configuration:-Layout
 layout {
     // Set gaps around windows in logical pixels.
     gaps 16
@@ -134,7 +139,7 @@ layout {
         // fixed 1920
     }
 
-    // You can also customize the heights that "switch-preset-window-height" (Mod+Ctrl+Shift+R) toggles between.
+    // You can also customize the heights that "switch-preset-window-height" (Mod+Shift+R) toggles between.
     // preset-window-heights { }
 
     // You can change the default width of the new windows.
@@ -270,7 +275,19 @@ layout {
 // This line starts waybar, a commonly used bar for Wayland compositors.
 spawn-at-startup "waybar"
 
-// To run a shell command (with variables, pipes, etc.), use spawn-sh-at-startup:
+spawn-at-startup "wezterm"
+
+spawn-at-startup "fcitx5" "-d" "--replace"
+//spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "NIRI_SOCKET" "XDG_CURRENT_DESKTOP" // xremap fail
+//spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "XDG_CURRENT_DESKTOP=niri" // xremap fail
+//spawn-at-startup "dbus-update-activation-environment" "--systemd" "WAYLAND_DISPLAY" "NIRI_SOCKET" "XDG_CURRENT_DESKTOP=niri" // xremap fail
+
+spawn-at-startup "systemctl" "--user" "restart" "xremap.service"
+
+spawn-at-startup "mako"
+spawn-at-startup "hypridle"
+
+// To run a shell command (with variables, pipes, etc.), use spawn-sh-ata-startup:
 // spawn-sh-at-startup "qs -c ~/source/qs/MyAwesomeShell"
 
 hotkey-overlay {
@@ -295,7 +312,7 @@ screenshot-path "~/Pictures/Screenshots/Screenshot from %Y-%m-%d %H-%M-%S.png"
 
 // Animation settings.
 // The wiki explains how to configure individual animations:
-// https://niri-wm.github.io/niri/Configuration:-Animations
+// https://yalter.github.io/niri/Configuration:-Animations
 animations {
     // Uncomment to turn off all animations.
     // off
@@ -306,17 +323,17 @@ animations {
 
 // Window rules let you adjust behavior for individual windows.
 // Find more information on the wiki:
-// https://niri-wm.github.io/niri/Configuration:-Window-Rules
+// https://yalter.github.io/niri/Configuration:-Window-Rules
 
 // Work around WezTerm's initial configure bug
 // by setting an empty default-column-width.
-window-rule {
-    // This regular expression is intentionally made as specific as possible,
-    // since this is the default config, and we want no false positives.
-    // You can get away with just app-id="wezterm" if you want.
-    match app-id=r#"^org\.wezfurlong\.wezterm$"#
-    default-column-width {}
-}
+//window-rule {
+//    // This regular expression is intentionally made as specific as possible,
+//    // since this is the default config, and we want no false positives.
+//    // You can get away with just app-id="wezterm" if you want.
+//    match app-id=r#"^org\.wezfurlong\.wezterm$"#
+//    default-column-width {}
+//}
 
 // Open the Firefox picture-in-picture player as floating by default.
 window-rule {
@@ -362,7 +379,8 @@ binds {
     Mod+Shift+Slash { show-hotkey-overlay; }
 
     // Suggested binds for running programs: terminal, app launcher, screen locker.
-    Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
+    //Mod+T hotkey-overlay-title="Open a Terminal: alacritty" { spawn "alacritty"; }
+    Mod+T hotkey-overlay-title="Open a Terminal: Wezterm" { spawn "wezterm"; }
     Mod+D hotkey-overlay-title="Run an Application: fuzzel" { spawn "fuzzel"; }
     Super+Alt+L hotkey-overlay-title="Lock the Screen: swaylock" { spawn "swaylock"; }
 
@@ -550,22 +568,13 @@ binds {
     // Expel the bottom window from the focused column to the right.
     Mod+Period { expel-window-from-column; }
 
-    // Cycle through widths set in preset-column-widths.
     Mod+R { switch-preset-column-width; }
     // Cycling through the presets in reverse order is also possible.
-    Mod+Shift+R { switch-preset-column-width-back; }
-
-    Mod+Ctrl+Shift+R { switch-preset-window-height; }
+    // Mod+R { switch-preset-column-width-back; }
+    Mod+Shift+R { switch-preset-window-height; }
     Mod+Ctrl+R { reset-window-height; }
-
     Mod+F { maximize-column; }
     Mod+Shift+F { fullscreen-window; }
-
-    // While maximize-column leaves gaps and borders around the window,
-    // maximize-window-to-edges doesn't: the window expands to the edges of the screen.
-    // This bind corresponds to normal window maximizing,
-    // e.g. by double-clicking on the titlebar.
-    Mod+M { maximize-window-to-edges; }
 
     // Expand the focused column to space not taken up by other fully visible columns.
     // Makes the column "fill the rest of the space".
@@ -585,11 +594,13 @@ binds {
     // Pixel sizes use logical, or scaled, pixels. I.e. on an output with scale 2.0,
     // set-column-width "100" will make the column occupy 200 physical screen pixels.
     Mod+Minus { set-column-width "-10%"; }
-    Mod+Equal { set-column-width "+10%"; }
+    //Mod+Equal { set-column-width "+10%"; } // fail,original key assign
+    Mod+Semicolon { set-column-width "+10%"; } // pass
 
     // Finer height adjustments when in column with other windows.
     Mod+Shift+Minus { set-window-height "-10%"; }
-    Mod+Shift+Equal { set-window-height "+10%"; }
+    //Mod+Shift+Equal { set-window-height "+10%"; }// fail, original key assign
+    Mod+Shift+Semicolon { set-window-height "+10%"; }
 
     // Move the focused window between the floating and the tiling layout.
     Mod+V       { toggle-window-floating; }
@@ -623,8 +634,8 @@ binds {
     Mod+Escape allow-inhibiting=false { toggle-keyboard-shortcuts-inhibit; }
 
     // The quit action will show a confirmation dialog to avoid accidental exits.
-    Mod+Shift+E { quit; }
-    Ctrl+Alt+Delete { quit; }
+    Mod+Shift+E { quit skip-confirmation=true; }
+    Ctrl+Alt+Delete { quit skip-confirmation=true; }
 
     // Powers off the monitors. To turn them back on, do any input like
     // moving the mouse or pressing any other key.
